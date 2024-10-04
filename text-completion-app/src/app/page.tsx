@@ -1,12 +1,14 @@
 // File: app/page.tsx
 'use client';
 
-import { useState, useEffect, SetStateAction } from 'react';
+import { useState, useEffect, SetStateAction, useRef } from 'react';
 import styles from './styles/Home.module.scss';
 
 export default function Home() {
   const [inputText, setInputText] = useState('');
   const [generatedHint, setGeneratedHint] = useState('');
+  const [loading, setLoading] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const fetchHint = async () => {
@@ -14,6 +16,15 @@ export default function Home() {
         setGeneratedHint('');
         return;
       }
+
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+
+      setLoading(true);
       try {
         const response = await fetch('/api/generateText', {
           method: 'POST',
@@ -21,28 +32,43 @@ export default function Home() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ prompt: inputText }),
+          signal: controller.signal,
         });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch response');
+        }
+
         const data = await response.json();
         if (data.text) {
           const hint = data.text.replace(inputText, '').trim();
-
-          console.log('Generated hint:', hint);
 
           setGeneratedHint(hint);
         } else {
           setGeneratedHint('');
         }
       } catch (error) {
-        console.error('Error fetching hint:', error);
-        setGeneratedHint('');
+        if ((error as any).name === 'AbortError') {
+          console.log('Fetch aborted');
+        } else {
+          console.error('Error fetching hint:', error);
+          setGeneratedHint('');
+        }
+      } finally {
+        setLoading(false);
       }
     };
 
     const delayDebounceFn = setTimeout(() => {
       fetchHint();
-    }, 300); // Trigger hint generation 300ms after input changes
+    }, 200); // Debounce time
 
-    return () => clearTimeout(delayDebounceFn);
+    return () => {
+      clearTimeout(delayDebounceFn);
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, [inputText]);
 
   const handleInputChange = (e: { target: { value: SetStateAction<string>; }; }) => {
