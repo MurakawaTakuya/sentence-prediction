@@ -133,6 +133,9 @@ export default function Home() {
             <span className={styles.generatedHint}>{generatedHint}</span>
           </div>
         </div>
+        <div className={styles.arrowHint}>
+          <p>Press <strong>Right Arrow</strong> to accept the next suggested word, or <strong>Left Arrow</strong> to remove the last word.</p>
+        </div>
       </div>
     </div>
   );
