@@ -1,54 +1,71 @@
 // File: app/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, SetStateAction } from 'react';
 import styles from './styles/Home.module.scss';
 
 export default function Home() {
   const [inputText, setInputText] = useState('');
-  const [generatedText, setGeneratedText] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [generatedHint, setGeneratedHint] = useState('');
 
-  const handleGenerateText = async () => {
-    if (!inputText) return;
-    setLoading(true);
-
-    try {
-      const response = await fetch('/api/generateText', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: inputText }),
-      });
-
-      const data = await response.json();
-      console.log(data);
-      if (data.text) {
-        setGeneratedText(data.text);
-      } else {
-        setGeneratedText('Error: No text generated');
+  useEffect(() => {
+    const fetchHint = async () => {
+      if (inputText.trim() === '') {
+        setGeneratedHint('');
+        return;
       }
-    } catch {
-      setGeneratedText('Error: Failed to fetch generated text');
-    } finally {
-      setLoading(false);
-    }
+      try {
+        const response = await fetch('/api/generateText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt: inputText }),
+        });
+        const data = await response.json();
+        if (data.text) {
+          const hint = data.text.replace(inputText, '').trim();
+
+          console.log('Generated hint:', hint);
+
+          setGeneratedHint(hint);
+        } else {
+          setGeneratedHint('');
+        }
+      } catch (error) {
+        console.error('Error fetching hint:', error);
+        setGeneratedHint('');
+      }
+    };
+
+    const delayDebounceFn = setTimeout(() => {
+      fetchHint();
+    }, 300); // Trigger hint generation 300ms after input changes
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [inputText]);
+
+  const handleInputChange = (e: { target: { value: SetStateAction<string>; }; }) => {
+    setInputText(e.target.value);
+    setGeneratedHint('');
   };
 
   return (
     <div className={styles.container}>
-      <h1>Text Generator</h1>
-      <textarea
-        className={styles.textInput}
-        value={inputText}
-        onChange={(e) => setInputText(e.target.value)}
-        placeholder="Enter an incomplete sentence..."
-      />
-      <button className={styles.generateButton} onClick={handleGenerateText} disabled={loading}>
-        {loading ? 'Generating...' : 'Generate'}
-      </button>
-      {generatedText && <p className={styles.generatedText}>{generatedText}</p>}
+      <h1>Text Generator with Hint</h1>
+      <div className={styles.inputContainer}>
+        <div className={styles.textWrapper}>
+          <span className={styles.textInput}>{inputText}</span>
+          <span className={styles.generatedText}>&nbsp;{generatedHint}</span>
+          <textarea
+            className={styles.hiddenTextArea}
+            value={inputText}
+            onChange={handleInputChange}
+            placeholder="Enter an incomplete sentence..."
+            aria-label="Input text"
+          />
+        </div>
+      </div>
     </div>
   );
 }

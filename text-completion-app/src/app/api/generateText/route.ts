@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
 
+// 環境変数の存在確認
 if (!process.env.OPENAI_API_KEY) {
   console.error('Error: OPENAI_API_KEY is missing');
   throw new Error('OPENAI_API_KEY is not set in environment variables');
