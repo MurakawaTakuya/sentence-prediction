@@ -9,6 +9,7 @@ export default function Home() {
   const [generatedHint, setGeneratedHint] = useState('');
   const [loading, setLoading] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const textAreaRef = useRef<HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     const fetchHint = async () => {
@@ -17,6 +18,7 @@ export default function Home() {
         return;
       }
 
+      // Cancel the previous request if it's still in progress
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -43,6 +45,8 @@ export default function Home() {
         if (data.text) {
           const hint = data.text.replace(inputText, '').trim();
 
+          console.log('Generated hint:', hint);
+
           setGeneratedHint(hint);
         } else {
           setGeneratedHint('');
@@ -61,7 +65,7 @@ export default function Home() {
 
     const delayDebounceFn = setTimeout(() => {
       fetchHint();
-    }, 200); // Debounce time
+    }, 200); // Trigger hint generation 200ms after input changes
 
     return () => {
       clearTimeout(delayDebounceFn);
@@ -76,19 +80,48 @@ export default function Home() {
     setGeneratedHint('');
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'ArrowRight' && generatedHint) {
+      e.preventDefault();
+      // Add the first word of the hint to the input text
+      const firstWord = generatedHint.split(' ')[0];
+      setInputText((prev) => prev + (prev.endsWith(' ') ? '' : ' ') + firstWord + ' ');
+      setGeneratedHint(generatedHint.replace(firstWord, '').trim());
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      // Remove the last word from the input text
+      setInputText((prev) => {
+        const words = prev.trim().split(' ');
+        words.pop();
+        return words.join(' ') + (words.length > 0 ? ' ' : '');
+      });
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h1>Text Generator with Hint</h1>
       <div className={styles.inputContainer}>
         <div className={styles.textWrapper}>
-          <span className={styles.textInput}>{inputText}</span>
-          <span className={styles.generatedText}>&nbsp;{generatedHint}</span>
+          <div className={styles.hintOverlay}>
+            <span className={styles.textInput}>{inputText}</span>
+            <span className={styles.generatedHint}>{generatedHint}</span>
+          </div>
           <textarea
-            className={styles.hiddenTextArea}
+            ref={textAreaRef}
+            className={styles.textArea}
             value={inputText}
             onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
             placeholder="Enter an incomplete sentence..."
             aria-label="Input text"
+            rows={1}
+            style={{ height: 'auto' }}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = target.scrollHeight + 'px';
+            }}
           />
         </div>
       </div>
