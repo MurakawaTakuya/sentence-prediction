@@ -9,11 +9,6 @@
   background-color: #f0f0f0;
 }
 
-.container h1 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
 .inputContainer {
   position: relative;
   width: 100%;
@@ -22,37 +17,56 @@
 
 .textWrapper {
   position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  background-color: white;
 }
 
-.textInput {
-  color: black;
-}
-
-.generatedText {
-  color: #888;
-}
-
-.hiddenTextArea {
+.hintOverlay {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.5;
+  z-index: 10;
+  pointer-events: none;
+  color: #888;
+  display: flex;
+  align-items: flex-start;
+  white-space: pre-wrap;
   height: 100%;
-  opacity: 0;
-  resize: none;
-  border: none;
-  background: transparent;
-  caret-color: black;
 }
 
-.hint {
-  display: none;
+.textInput {
+  color: black;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.generatedHint {
+  color: #888;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.61;
+  padding-left: 2px;
+}
+
+.textArea {
+  position: relative;
+  width: 100%;
+  padding: 1rem;
+  resize: none;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: transparent;
+  font-size: 1rem;
+  font-family: inherit;
+  line-height: 1.5;
+  caret-color: black;
+  color: black;
+  z-index: 1;
+  background-color: white;
+  overflow: hidden;
 }

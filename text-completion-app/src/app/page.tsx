@@ -18,7 +18,6 @@ export default function Home() {
         return;
       }
 
-      // Cancel the previous request if it's still in progress
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -65,7 +64,7 @@ export default function Home() {
 
     const delayDebounceFn = setTimeout(() => {
       fetchHint();
-    }, 200); // Trigger hint generation 200ms after input changes
+    }, 200); // Prevent too many requests while typing
 
     return () => {
       clearTimeout(delayDebounceFn);
@@ -83,13 +82,11 @@ export default function Home() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'ArrowRight' && generatedHint) {
       e.preventDefault();
-      // Add the first word of the hint to the input text
       const firstWord = generatedHint.split(' ')[0];
       setInputText((prev) => prev + (prev.endsWith(' ') ? '' : ' ') + firstWord + ' ');
       setGeneratedHint(generatedHint.replace(firstWord, '').trim());
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      // Remove the last word from the input text
       setInputText((prev) => {
         const words = prev.trim().split(' ');
         words.pop();
@@ -100,13 +97,8 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <h1>Text Generator with Hint</h1>
       <div className={styles.inputContainer}>
         <div className={styles.textWrapper}>
-          <div className={styles.hintOverlay}>
-            <span className={styles.textInput}>{inputText}</span>
-            <span className={styles.generatedHint}>{generatedHint}</span>
-          </div>
           <textarea
             ref={textAreaRef}
             className={styles.textArea}
@@ -123,6 +115,10 @@ export default function Home() {
               target.style.height = target.scrollHeight + 'px';
             }}
           />
+          <div className={styles.hintOverlay}>
+            <span className={styles.textInput} style={{ visibility: 'hidden' }}>{inputText}</span>
+            <span className={styles.generatedHint}>{generatedHint}</span>
+          </div>
         </div>
       </div>
     </div>
