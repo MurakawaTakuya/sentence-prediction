@@ -42,7 +42,11 @@ export default function Home() {
 
         const data = await response.json();
         if (data.text) {
-          const hint = data.text.replace(inputText, '').trim();
+          let hint = data.text.replace(inputText, '').trim();
+
+          if (!inputText.endsWith(' ') && hint) {
+            hint = ' ' + hint;
+          }
 
           console.log('Generated hint:', hint);
 
@@ -82,9 +86,18 @@ export default function Home() {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'ArrowRight' && generatedHint) {
       e.preventDefault();
-      const firstWord = generatedHint.split(' ')[0];
-      setInputText((prev) => prev + (prev.endsWith(' ') ? '' : ' ') + firstWord + ' ');
-      setGeneratedHint(generatedHint.replace(firstWord, '').trim());
+      let firstPart = generatedHint.split(' ')[0];
+      let restHint = generatedHint.slice(firstPart.length).trim();
+
+      if (generatedHint.startsWith(' ')) {
+        const nextWord = restHint.split(' ')[0];
+        firstPart += ' ' + nextWord;
+        restHint = restHint.slice(nextWord.length).trim();
+      }
+
+      const shouldAddSpace = /^[a-zA-Z]+$/.test(firstPart);
+      setInputText((prev) => prev + (shouldAddSpace && !prev.endsWith(' ') ? ' ' : '') + firstPart + (shouldAddSpace ? ' ' : ''));
+      setGeneratedHint(restHint);
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       setInputText((prev) => {
