@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: 'ユーザーからのメッセージの文章の続きを1文のみ生成してください。' },
+        { role: 'system', content: 'ユーザーからのメッセージの文章の続きを1文のみ生成してください。文章を結合した時に間のスペースが正しくなるようにしてください。' },
         { role: 'user', content: prompt },
       ],
       max_tokens: 50,
